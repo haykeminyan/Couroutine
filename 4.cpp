@@ -16,52 +16,42 @@ struct task {
         bool is_finished;
 	char local_data[128];
 };
-
-//#define task_count 4
-//static struct task tasks[task_count];
 static int current_task_i = 0;
 static int task_count;
-
-/**
- * Check not in a function, because setjmp result can not be used
- * after return.
- *
- * Another way how to do not put 'check_resched' after each line -
- * do "define ; check_resched;".
- */
-#define check_resched {						\
-	/* For an example: just resched after each line. */	\
+#define check_resched {/* For an example: just resched after each line. */	\
 	int old_i = current_task_i;				\
 	current_task_i = (current_task_i + 1) % task_count;	\
 	if (setjmp(tasks[old_i].env) == 0)			\
-		longjmp(tasks[current_task_i].env, 1); }
+		longjmp(tasks[current_task_i].env, 1);}
 
-int merge_two_files(char *resfilelast,char *newfile,char *resfilenew);//сортировка слиянием
-		
+int merge_two_files(char *resfilelast,char *newfile,char *resfilenew);
 static void
 my_coroutine(task *tasks)
 {
-    //printf("%d hello! my filename=\'%s\'\n",current_task_i,tasks[current_task_i].local_filename);
-        //sprintf(tasks[current_task_i].local_data, "Local data for task_id%d",
-        	//current_task_i);
-	//fprintf(stderr, "Before re-schedule: task_id = %d\n", current_task_i);
-	//check_resched;
-	//fprintf(stderr, "After first re-schedule, task_id = %d\n",current_task_i);
-	check_resched;
+    check_resched;
     tasks[current_task_i].t=clock();
-    sprintf(tasks[current_task_i].tmp_filename, "tmp%d.tmp",current_task_i);//печатает в строке файлнейм текщей номер корутины 
+    check_resched;
+    sprintf(tasks[current_task_i].tmp_filename, "tmp%d.tmp",current_task_i);
+    check_resched;
     sprintf(tasks[current_task_i].local_data, "sort -g %s > %s",tasks[current_task_i].local_filename,tasks[current_task_i].tmp_filename);
+    check_resched;
     system(tasks[current_task_i].local_data);
-	sprintf(tasks[current_task_i].local_data, "cat %s > %s",tasks[current_task_i].tmp_filename,tasks[current_task_i].local_filename);
+	check_resched;
+    sprintf(tasks[current_task_i].local_data, "cat %s > %s",tasks[current_task_i].tmp_filename,tasks[current_task_i].local_filename);
+    check_resched;
     system(tasks[current_task_i].local_data);
-	sprintf(tasks[current_task_i].local_data, "cat %s",tasks[current_task_i].local_filename);
+	check_resched;
+    sprintf(tasks[current_task_i].local_data, "cat %s",tasks[current_task_i].local_filename);
+    check_resched;
     system(tasks[current_task_i].local_data);
-    //fprintf(stderr, "After second re-schedule, task_id = %d\n",current_task_i);
-	tasks[current_task_i].is_finished = true;
+    check_resched;
+    tasks[current_task_i].is_finished = true;
+    check_resched;
     tasks[current_task_i].t=clock()-tasks[current_task_i].t;
+    check_resched;
     printf("#%d coroutine time is %.2lf\n",current_task_i,tasks[current_task_i].t/CLOCKS_PER_SEC);
-	//fprintf(stderr, "This is local data: %s\n",tasks[current_task_i].local_data);
-	while (true) {
+    check_resched;
+    while (true) {
 		bool is_all_finished = true;
 		for (int i = 0; i < task_count; ++i) {
 			if (! tasks[i].is_finished) {
@@ -108,9 +98,7 @@ main(int argc, char **argv)
             return -2;
         }
         cout<<"task_count="<<task_count <<endl;
-        //FILE fr[task_count];
         
-       // task_count=4;
         struct task tasks[task_count];//courine massiv
         for (i = 0; i < task_count; ++i) {
                 tasks[i].id = i;
@@ -121,9 +109,6 @@ main(int argc, char **argv)
                     return -1;
                     
                 }
-                
-                
-		/* Entry point for new co-coutines. */
                 setjmp(tasks[i].env);
         }
         if(flag==1)
@@ -136,10 +121,7 @@ main(int argc, char **argv)
         my_coroutine(tasks);
         t=clock()-t;
         printf("All time is %.2lf \n",t/CLOCKS_PER_SEC);
-        
         system("rm -f *.tmp");
-   //end of first part of task - all files are sorted
-        
         sprintf(tmp_buf,"cat %s > %s",tasks[0].local_filename,resfilelast);
         system(tmp_buf);
    
@@ -161,7 +143,6 @@ main(int argc, char **argv)
         }
         sprintf(tmp_buf,"cat %s > result.txt",resfilelast);
         system(tmp_buf);
-
         system("rm -f *.tmp");
         printf("Finished\n");
         free(resfilelast);
@@ -192,7 +173,6 @@ int merge_two_files(char *resfilelast,char *newfile,char *resfilenew)
         fclose(fr2);
         return -1;
     }
-    //merging
     double x,y;
     if(!(fscanf(fr1,"%lf",&x)==1))
     {
@@ -340,11 +320,8 @@ int merge_two_files(char *resfilelast,char *newfile,char *resfilenew)
             }
         }
     }
-        
     fclose(fr1);
     fclose(fr2);
     fclose(fw);
-        
     return 0;
 }
-        
