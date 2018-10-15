@@ -36,11 +36,11 @@ my_coroutine(task *tasks)
     sprintf(tasks[current_task_i].local_data, "sort -g %s > %s",tasks[current_task_i].local_filename,tasks[current_task_i].tmp_filename);
     check_resched;
     system(tasks[current_task_i].local_data);
-	check_resched;
+    check_resched;
     sprintf(tasks[current_task_i].local_data, "cat %s > %s",tasks[current_task_i].tmp_filename,tasks[current_task_i].local_filename);
     check_resched;
     system(tasks[current_task_i].local_data);
-	check_resched;
+    check_resched;
     sprintf(tasks[current_task_i].local_data, "cat %s",tasks[current_task_i].local_filename);
     check_resched;
     system(tasks[current_task_i].local_data);
