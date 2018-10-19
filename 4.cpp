@@ -36,11 +36,11 @@ my_coroutine(task *tasks)
     sprintf(tasks[current_task_i].local_data, "sort -g %s > %s",tasks[current_task_i].local_filename,tasks[current_task_i].tmp_filename);
     check_resched;
     system(tasks[current_task_i].local_data);
-    check_resched;
+	check_resched;
     sprintf(tasks[current_task_i].local_data, "cat %s > %s",tasks[current_task_i].tmp_filename,tasks[current_task_i].local_filename);
     check_resched;
     system(tasks[current_task_i].local_data);
-    check_resched;
+	check_resched;
     sprintf(tasks[current_task_i].local_data, "cat %s",tasks[current_task_i].local_filename);
     check_resched;
     system(tasks[current_task_i].local_data);
@@ -69,8 +69,7 @@ my_coroutine(task *tasks)
 	}
 }
 
-int
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
         double t;
         int i,flag=1;
@@ -80,7 +79,7 @@ main(int argc, char **argv)
         if(!(resfilelast=(char*)malloc(500*sizeof(char))))  
         {
             printf("Not enough memory!\n");
-            return -100;
+            return -1009;
         }
         resfilenew=resfilelast+250;
         strcpy(resfilelast,"res1.tmp");
@@ -98,8 +97,7 @@ main(int argc, char **argv)
             return -2;
         }
         cout<<"task_count="<<task_count <<endl;
-        
-        struct task tasks[task_count];//courine massiv
+        struct task tasks[task_count];
         for (i = 0; i < task_count; ++i) {
                 tasks[i].id = i;
                 tasks[i].is_finished = false;
@@ -124,24 +122,14 @@ main(int argc, char **argv)
         system("rm -f *.tmp");
         sprintf(tmp_buf,"cat %s > %s",tasks[0].local_filename,resfilelast);
         system(tmp_buf);
-   
         for(i=1;i<task_count;i++)
         {
-            sprintf(tmp_buf,"cat %s",resfilelast);
             system(tmp_buf);
-            printf("\nadding file \'%s\'\n",tasks[i].local_filename);
             merge_two_files(resfilelast,tasks[i].local_filename,resfilenew);
             char_tmp=resfilelast;
             resfilelast=resfilenew;
             resfilenew=char_tmp;
-            printf("res1:\n");
-            system("cat res1.tmp");
-            printf("\n");
-            printf("res2:\n");
-            system("cat res2.tmp");
-            printf("\n-----------\n");
         }
-        sprintf(tmp_buf,"cat %s > result.txt",resfilelast);
         system(tmp_buf);
         system("rm -f *.tmp");
         printf("Finished\n");
@@ -151,7 +139,6 @@ main(int argc, char **argv)
 
 int merge_two_files(char *resfilelast,char *newfile,char *resfilenew)
 {     
-    printf("\'%s\' \'%s\' \'%s\'\n",resfilelast,newfile,resfilenew);
     FILE *fr1=fopen(resfilelast,"r");
     if(fr1==NULL)
     {
@@ -173,155 +160,5 @@ int merge_two_files(char *resfilelast,char *newfile,char *resfilenew)
         fclose(fr2);
         return -1;
     }
-    double x,y;
-    if(!(fscanf(fr1,"%lf",&x)==1))
-    {
-        printf("first x trouble!\n");
-        if(!feof(fr1))
-        {    
-            printf("Error10\n");
-            fclose(fr1);
-            fclose(fr2);
-            fclose(fw);
-            return -1;
-        }
-        for(;;)
-        {
-            if(!(fscanf(fr2,"%lf",&y)==1))
-            {
-                if(!feof(fr2))
-                {    
-                    printf("Error110\n");
-                   fclose(fr1);
-                    fclose(fr2);
-                    fclose(fw);
-                    return -1;
-                }
-                printf("break1\n");
-                break;
-            }
-            fprintf(fw,"%lf ",y);
-        }
-        fclose(fr1);
-        fclose(fr2);
-        fclose(fw);
-        return 0;
-    }
-    if(!(fscanf(fr2,"%lf",&y)==1))
-    {
-        printf("first y trouble!\n");
-        if(!feof(fr2))
-        {    
-            printf("Error111\n");
-            fclose(fr1);
-            fclose(fr2);
-            fclose(fw);
-            return -1;
-        }
-        for(;;)
-        {
-            if(!(fscanf(fr1,"%lf",&x)==1))
-            {
-                if(!feof(fr1))
-                {    
-                    printf("Error112\n");
-                    fclose(fr1);
-                    fclose(fr2);
-                    fclose(fw);
-                    return -1;
-                }
-                printf("break2\n");
-                break;
-            }
-            fprintf(fw,"%lf ",x);
-        }
-        fclose(fr1);
-        fclose(fr2);
-        fclose(fw);
-        return 0;
-    }
-        
-    for(;;)
-    {
-        if(x<y)
-        {
-            printf("printing x: %lf\n",x);
-            fprintf(fw,"%lf\n",x );
-            if(!(fscanf(fr1,"%lf",&x)==1))
-            {
-                if(!feof(fr1))
-                {    
-                    printf("Error10\n");
-                    fclose(fr1);
-                    fclose(fr2);
-                    fclose(fw);
-                    return -1;
-                }
-                for(;;)
-                {
-                    if(!(fscanf(fr2,"%lf",&y)==1))
-                    {
-                        if(!feof(fr2))
-                        {      
-                            printf("Error110\n");
-                            fclose(fr1);
-                            fclose(fr2);
-                            fclose(fw);
-                            return -1;
-                        }
-                        printf("break3\n");
-                        break;
-                    }
-                    fprintf(fw,"%lf ",y);
-                }
-                fclose(fr1);
-                fclose(fr2);
-                fclose(fw);
-                return 0;
-            }
-            
-        }
-        else
-        {
-            
-            printf("printing y: %lf\n",y);
-            fprintf(fw,"%lf ",y);
-            if(!(fscanf(fr2,"%lf",&y)==1))
-            {
-                if(!feof(fr2))
-                {    
-                    printf("Error111\n");
-                    fclose(fr1);
-                    fclose(fr2);
-                    fclose(fw);
-                    return -1;
-                }
-                for(;;)
-                {
-                    if(!(fscanf(fr1,"%lf",&x)==1))
-                    {
-                        if(!feof(fr1))
-                        {    
-                            printf("Error112\n");
-                            fclose(fr1);
-                            fclose(fr2);
-                            fclose(fw);
-                            return -1;
-                        }
-                        printf("break4\n");
-                        break;
-                    }
-                    fprintf(fw,"%lf ",x);
-                }
-                fclose(fr1);
-                fclose(fr2);
-                fclose(fw);
-                return 0;
-            }
-        }
-    }
-    fclose(fr1);
-    fclose(fr2);
-    fclose(fw);
     return 0;
 }
