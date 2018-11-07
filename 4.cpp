@@ -1,26 +1,28 @@
-#include <setjmp.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include<iostream>
-#include <cstdlib>
-#include <string.h>
-#include <stdlib.h>
-#include <time.h>
+x
 using namespace std;
 struct task {
-        double t;
+        double t;//time
+        double tmp;
+        int temp;
         char local_filename[256];
         char tmp_filename[256];
         int id;
+        FILE *fp;
+        long int all_time; 
         jmp_buf env;
+        double *arr;
+        int j;
+        int k;
+        int count;
         bool is_finished;
 	char local_data[128];
+    char str[100];
 };
 
 static int current_task_i = 0;
 static int task_count;
 
-
+//int T;
 #define check_resched {						\
 	/* For an example: just resched after each line. */	\
 	int old_i = current_task_i;				\
@@ -32,36 +34,96 @@ int merge_two_files(char *resfilelast,char *newfile,char *resfilenew);
 		
 static void my_coroutine(task *tasks)
 {
+printf("1#%d coroutine time is %.2lf\n",current_task_i,tasks[current_task_i].t/CLOCKS_PER_SEC);check_resched;
+
     tasks[current_task_i].t=clock();check_resched;
     sprintf(tasks[current_task_i].tmp_filename, "tmp%d.tmp",current_task_i);check_resched;
-    sprintf(tasks[current_task_i].local_data, "echo | cat %s | xargs -n1 | sort -g | xargs > %s\n",tasks[current_task_i].local_filename,tasks[current_task_i].tmp_filename);check_resched;
-    system(tasks[current_task_i].local_data);check_resched;
-    sprintf(tasks[current_task_i].local_data, "cat %s > %s\n",tasks[current_task_i].tmp_filename,tasks[current_task_i].local_filename);check_resched;
-    system(tasks[current_task_i].local_data);check_resched;
-    tasks[current_task_i].is_finished = true;check_resched;
-    tasks[current_task_i].t=clock()-tasks[current_task_i].t;check_resched;
-    printf("#%d coroutine time is %.2lf\n",current_task_i,tasks[current_task_i].t/CLOCKS_PER_SEC);check_resched;
-    while (true)
+   // sprintf(tasks[current_task_i].local_data, "echo | cat %s | xargs -n1 | sort -g | xargs > %s\n",tasks[current_task_i].local_filename,tasks[current_task_i].tmp_filename);check_resched;
+   // system(tasks[current_task_i].local_data);check_resched;
+    //schitaem skolko chisel v faile
+    tasks[current_task_i].fp = fopen(tasks[current_task_i].local_filename, "r");
+    check_resched;
+    if(tasks[current_task_i].fp==NULL)
     {
-	bool is_all_finished = true;
-	for (int i = 0; i < task_count; ++i)
-	{
-	    if (! tasks[i].is_finished)
-	    {
-		fprintf(stderr, "Task_id=%d still active, re-scheduling\n", i);
-		is_all_finished = false;
-		break;
-	    }
-	}
-	if (is_all_finished)
-	{
-	    fprintf(stderr, "No more active tasks to schedule.\n");
-	    return;
-	}
-	check_resched;
+//printf("CANT OPEN FILE#%d coroutine time is %.2lf\n",current_task_i,tasks[current_task_i].t/CLOCKS_PER_SEC);check_resched;        
+    }
+    tasks[current_task_i].count=0;check_resched;
+    while (fscanf(tasks[current_task_i].fp, "%lf", &tasks[current_task_i].tmp) != EOF) 
+    {
+        tasks[current_task_i].count+=1;
+        check_resched;
+    }
+//printf("2#%d coroutine time is %.2lf\n",current_task_i,tasks[current_task_i].t/CLOCKS_PER_SEC);check_resched;
+
+    check_resched;
+    fclose(tasks[current_task_i].fp);check_resched;
+    tasks[current_task_i].arr=(double *)malloc(sizeof(double)*tasks[current_task_i].count);
+    check_resched;
+    tasks[current_task_i].fp = fopen(tasks[current_task_i].local_filename, "r");
+    check_resched;
+    tasks[current_task_i].j=0;check_resched;
+    while (fscanf(tasks[current_task_i].fp, "%lf", &tasks[current_task_i].arr[tasks[current_task_i].j]) != EOF) 
+    {
+        check_resched;tasks[current_task_i].j++;check_resched;
+    }
+//printf("3#%d coroutine time is %.2lf\n",current_task_i,tasks[current_task_i].t/CLOCKS_PER_SEC);check_resched;
+    
+    //Try to realize Bubble sort
+    for (tasks[current_task_i].j = 0;
+         tasks[current_task_i].j < tasks[current_task_i].count; tasks[current_task_i].j++) {
+        for (tasks[current_task_i].k = 0; tasks[current_task_i].k < tasks[current_task_i].count-tasks[current_task_i].j-1 
+                                                                    ; tasks[current_task_i].k++) 
+        {
+            check_resched;
+            if (tasks[current_task_i].arr[tasks[current_task_i].k] >
+                tasks[current_task_i].arr[tasks[current_task_i].k+1]) {
+                check_resched;
+                tasks[current_task_i].tmp = tasks[current_task_i].arr[tasks[current_task_i].k];
+                check_resched;
+                tasks[current_task_i].arr[tasks[current_task_i].k] = tasks[current_task_i].arr[tasks[current_task_i].k+1];
+                check_resched;
+                tasks[current_task_i].arr[tasks[current_task_i].k+1] = tasks[current_task_i].tmp;
+                check_resched;
+            }
+        }
+    }
+
+
+    check_resched;
+    fclose(tasks[current_task_i].fp);
+    check_resched;
+    char str[12];
+
+    tasks[current_task_i].fp = fopen(tasks[current_task_i].local_filename, "w"); // write mode;
+    check_resched;
+    for (tasks[current_task_i].j = 0;
+         tasks[current_task_i].j < tasks[current_task_i].count; tasks[current_task_i].j++) {
+        check_resched;
+        fprintf(tasks[current_task_i].fp, "%lf ", tasks[current_task_i].arr[tasks[current_task_i].j]);
+        check_resched;
+    }
+
+
+    fclose(tasks[current_task_i].fp);
+    check_resched;
+    printf("#%d coroutine time is %.2lf\n",current_task_i,tasks[current_task_i].t/CLOCKS_PER_SEC);check_resched;
+    tasks[current_task_i].is_finished = true;
+
+    while (true) {
+        bool is_all_finished = true;
+        for (int i = 0; i < task_count; ++i) {
+            if (!tasks[i].is_finished) {
+                is_all_finished = false;
+                break;
+            }
+        }
+        if (is_all_finished) {
+            return;
+        }
+        check_resched;
     }
 }
-
+   
 int main(int argc, char **argv)
 {
 	if (argc <= 1)
@@ -80,7 +142,7 @@ int main(int argc, char **argv)
             return -100;
         }
         resfilenew=resfilelast+250;
-        strcpy(resfilelast,"res1.tmp");
+        strcpy(resfilelast,"res1.tmp");//strcpy
         strcpy(resfilenew,"res2.tmp");
        	task_count = argc - 1;
         cout<<"task_count="<<task_count <<endl;
@@ -88,7 +150,7 @@ int main(int argc, char **argv)
         for (i = 0; i < task_count; ++i) {
                 tasks[i].id = i;
                 tasks[i].is_finished = false;
-                strcpy(tasks[i].local_filename, argv[i + 1]);
+                strcpy(tasks[i].local_filename, argv[i + 1]);//strcpy
                 setjmp(tasks[i].env);
         }
         t=clock();
@@ -157,7 +219,7 @@ int merge_two_files(char *resfilelast,char *newfile,char *resfilenew)
                 }
                 break;
             }
-            fprintf(fw,"%lf ",y);
+            fprintf(fw,"%lf\n",y);
         }
         fclose(fr1);
         fclose(fr2);
@@ -183,7 +245,7 @@ int merge_two_files(char *resfilelast,char *newfile,char *resfilenew)
                 }
                 break;
             }
-            fprintf(fw,"%lf ",x);
+            fprintf(fw,"%lf\n",x);
         }
         fclose(fr1);
         fclose(fr2);
@@ -215,7 +277,7 @@ int merge_two_files(char *resfilelast,char *newfile,char *resfilenew)
                         }
                         break;
                     }
-                    fprintf(fw,"%lf ",y);
+                    fprintf(fw,"%lf\n",y);
                 }
                 fclose(fr1);
                 fclose(fr2);
@@ -225,7 +287,7 @@ int merge_two_files(char *resfilelast,char *newfile,char *resfilenew)
         }
         else
         {    
-            fprintf(fw,"%lf ",y);
+            fprintf(fw,"%lf\n",y);
             if(!(fscanf(fr2,"%lf",&y)==1))
             {
                 if(!feof(fr2))
@@ -244,7 +306,7 @@ int merge_two_files(char *resfilelast,char *newfile,char *resfilenew)
                         }
                         break;
                     }
-                    fprintf(fw,"%lf ",x);
+                    fprintf(fw,"%lf\n",x);
                 }
                 fclose(fr1);
                 fclose(fr2);
