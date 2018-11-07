@@ -12,14 +12,15 @@
 #include <time.h>
 using namespace std;
 struct task {
-        double t;//time
+        long int all_time;//time
+        double t_cur;
         double tmp;
         int temp;
         char local_filename[256];
         char tmp_filename[256];
         int id;
         FILE *fp;
-        long int all_time; 
+        //long int all_time; 
         jmp_buf env;
         double *arr;
         int j;
@@ -32,22 +33,31 @@ struct task {
 
 static int current_task_i = 0;
 static int task_count;
+int T;
+long int TALL=0;
+static std::chrono::high_resolution_clock::time_point start;
+static std::chrono::high_resolution_clock::time_point finish;
+//static std::chrono::high_resolution_clock::time_point timeallstart;
+//static std::chrono::high_resolution_clock::time_point timeallfinish;
 
 //int T;
 #define check_resched {						\
-	/* For an example: just resched after each line. */	\
-	int old_i = current_task_i;				\
+	finish = std::chrono::high_resolution_clock::now();  \
+    int temp = chrono::duration_cast<std::chrono::nanoseconds>(finish - start).count();\
+    if (temp>=T){  \
+    tasks[current_task_i].all_time += temp; \
+    start = finish;   \
+	int old_i = current_task_i;\
 	current_task_i = (current_task_i + 1) % task_count;	\
 	if (setjmp(tasks[old_i].env) == 0)			\
-		longjmp(tasks[current_task_i].env, 1); }
+		longjmp(tasks[current_task_i].env, 1); }}
 
 int merge_two_files(char *resfilelast,char *newfile,char *resfilenew);
 		
 static void my_coroutine(task *tasks)
 {
-printf("1#%d coroutine time is %.2lf\n",current_task_i,tasks[current_task_i].t/CLOCKS_PER_SEC);check_resched;
-
-    tasks[current_task_i].t=clock();check_resched;
+//printf("1#%d coroutine time is %.2lf\n",current_task_i,tasks[current_task_i].t/CLOCKS_PER_SEC);check_resched;
+   // tasks[current_task_i].t_cur=clock();check_resched;
     sprintf(tasks[current_task_i].tmp_filename, "tmp%d.tmp",current_task_i);check_resched;
    // sprintf(tasks[current_task_i].local_data, "echo | cat %s | xargs -n1 | sort -g | xargs > %s\n",tasks[current_task_i].local_filename,tasks[current_task_i].tmp_filename);check_resched;
    // system(tasks[current_task_i].local_data);check_resched;
@@ -115,10 +125,11 @@ printf("1#%d coroutine time is %.2lf\n",current_task_i,tasks[current_task_i].t/C
     }
 //printf("5#%d coroutine time is %.2lf\n",current_task_i,tasks[current_task_i].t/CLOCKS_PER_SEC);check_resched;
 
-    fclose(tasks[current_task_i].fp);
-    check_resched;
-    tasks[current_task_i].t=clock()-tasks[current_task_i].t;check_resched;
-    printf("#%d coroutine time is %.2lf\n",current_task_i,tasks[current_task_i].t/CLOCKS_PER_SEC);check_resched;
+    fclose(tasks[current_task_i].fp);check_resched;
+    free(tasks[current_task_i].arr);check_resched;
+   // tasks[current_task_i].t=clock()-tasks[current_task_i].t;check_resched;
+    printf("#%d coroutine time is\n",current_task_i);
+    cout << tasks[current_task_i].all_time << " ns" << endl; TALL+=tasks[current_task_i].all_time;
     tasks[current_task_i].is_finished = true;
 
     while (true) {
@@ -143,6 +154,7 @@ int main(int argc, char **argv)
 	    printf("No args.\n");
 	    return 0;
 	}
+	    T = atoi(argv[1]);
         double t;
         int i,flag=1;
         char tmp_buf[256],*char_tmp;
@@ -156,20 +168,25 @@ int main(int argc, char **argv)
         resfilenew=resfilelast+250;
         strcpy(resfilelast,"res1.tmp");//strcpy
         strcpy(resfilenew,"res2.tmp");
-       	task_count = argc - 1;
+       	task_count = argc - 2;
         cout<<"task_count="<<task_count <<endl;
         struct task tasks[task_count];
         for (i = 0; i < task_count; ++i) {
                 tasks[i].id = i;
                 tasks[i].is_finished = false;
-                strcpy(tasks[i].local_filename, argv[i + 1]);//strcpy
+                tasks[i].all_time=0;
+                strcpy(tasks[i].local_filename, argv[i + 2]);//strcpy
+                tasks[i].t_cur=clock();
                 setjmp(tasks[i].env);
         }
-        t=clock();
+        //timeallstart=start = std::chrono::high_resolution_clock::now();
         my_coroutine(tasks);
-        t=clock()-t;
-        printf("All time is %.2lf \n",t/CLOCKS_PER_SEC);
-        system("rm -f *.tmp");
+        //timeallfinish= std::chrono::high_resolution_clock::now();
+   //     long int temp = chrono::duration_cast<std::chrono::nanoseconds>(timeallfinish - timeallstart).count();
+   //     printf("All time is %ld ns\n",temp);
+        printf("All time is:\n");
+        cout << TALL << " ns" <<endl;
+        //system("rm -f *.tmp");
         sprintf(tmp_buf,"cat %s > %s",tasks[0].local_filename,resfilelast);
         system(tmp_buf);
         for(i=1;i<task_count;i++)
