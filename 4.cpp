@@ -98,13 +98,13 @@ printf("1#%d coroutine time is %.2lf\n",current_task_i,tasks[current_task_i].t/C
             }
         }
     }
-
+//printf("4#%d coroutine time is %.2lf\n",current_task_i,tasks[current_task_i].t/CLOCKS_PER_SEC);check_resched;
 
     check_resched;
     fclose(tasks[current_task_i].fp);
     check_resched;
     char str[12];
-
+//    sprintf(tasks[current_task_i].str, "%d%c", current_task_i,'\0');
     tasks[current_task_i].fp = fopen(tasks[current_task_i].local_filename, "w"); // write mode;
     check_resched;
     for (tasks[current_task_i].j = 0;
@@ -113,10 +113,11 @@ printf("1#%d coroutine time is %.2lf\n",current_task_i,tasks[current_task_i].t/C
         fprintf(tasks[current_task_i].fp, "%lf ", tasks[current_task_i].arr[tasks[current_task_i].j]);
         check_resched;
     }
-
+//printf("5#%d coroutine time is %.2lf\n",current_task_i,tasks[current_task_i].t/CLOCKS_PER_SEC);check_resched;
 
     fclose(tasks[current_task_i].fp);
     check_resched;
+    tasks[current_task_i].t=clock()-tasks[current_task_i].t;check_resched;
     printf("#%d coroutine time is %.2lf\n",current_task_i,tasks[current_task_i].t/CLOCKS_PER_SEC);check_resched;
     tasks[current_task_i].is_finished = true;
 
